@@ -1,10 +1,9 @@
 package com.productreview.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -42,7 +41,7 @@ fun ProductListScreen(
     viewModel: ProductListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val listState = rememberLazyGridState()
+    val listState = rememberLazyListState()
 
     var showCategoryFilter by remember { mutableStateOf(false) }
     var showSortFilter by remember { mutableStateOf(false) }
@@ -167,12 +166,10 @@ fun ProductListScreen(
                 }
 
                 else -> {
-                    // Product grid
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 160.dp),
+                    // Product list
+                    LazyColumn(
                         state = listState,
                         contentPadding = PaddingValues(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(

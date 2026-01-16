@@ -31,7 +31,7 @@ data class ApiProduct(
     @SerializedName("description")
     val description: String,
     @SerializedName("category")
-    val category: String,
+    val category: String? = null,
     @SerializedName("price")
     val price: Double,
     @SerializedName("averageRating")

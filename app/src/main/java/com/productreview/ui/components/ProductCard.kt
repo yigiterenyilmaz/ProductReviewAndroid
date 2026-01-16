@@ -61,14 +61,14 @@ class ProductCardViewModel @Inject constructor(
 }
 
 /**
- * Product card component for grid display
+ * Product card component for list display
  */
 @Composable
 fun ProductCard(
     product: Product,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ProductCardViewModel = hiltViewModel()
+    viewModel: ProductCardViewModel = hiltViewModel(key = "product_${product.id}")
 ) {
     val isInWishlist by viewModel.isInWishlist(product.id).collectAsStateWithLifecycle()
     Card(

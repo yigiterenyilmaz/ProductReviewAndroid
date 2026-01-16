@@ -27,7 +27,7 @@ data class Product(
                 id = apiProduct.id,
                 name = apiProduct.name,
                 description = apiProduct.description,
-                category = apiProduct.category,
+                category = apiProduct.category ?: "Other",
                 price = apiProduct.price,
                 averageRating = apiProduct.averageRating ?: 0.0,
                 reviewCount = apiProduct.reviewCount ?: 0,
