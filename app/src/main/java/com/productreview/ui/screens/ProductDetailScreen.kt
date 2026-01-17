@@ -47,6 +47,13 @@ fun ProductDetailScreen(
         }
     }
 
+    // Show error if review submission fails
+    LaunchedEffect(uiState.submitError) {
+        if (uiState.submitError != null) {
+            android.util.Log.e("ProductDetail", "Review submit error: ${uiState.submitError}")
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(

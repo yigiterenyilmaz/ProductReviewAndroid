@@ -3,6 +3,8 @@ package com.productreview.ui.viewmodel
 import com.productreview.data.model.ApiProduct
 import com.productreview.data.model.Page
 import com.productreview.data.repository.ProductRepository
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -13,12 +15,9 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 
 /**
- * Unit tests for ProductListViewModel
+ * Unit tests for ProductListViewModel using MockK
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProductListViewModelTest {
@@ -30,7 +29,7 @@ class ProductListViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        repository = mock()
+        repository = mockk()
     }
 
     @After
@@ -42,7 +41,7 @@ class ProductListViewModelTest {
     fun `initial state is loading`() = runTest {
         // Given
         val mockPage = createMockPage(emptyList())
-        whenever(repository.getProducts(any(), any(), any(), any())).thenReturn(Result.success(mockPage))
+        coEvery { repository.getProducts(any(), any(), any(), any()) } returns Result.success(mockPage)
 
         // When
         viewModel = ProductListViewModel(repository)
@@ -59,7 +58,7 @@ class ProductListViewModelTest {
             ApiProduct(id = 2, name = "Product 2", description = "Desc 2", category = "Audio", price = 149.99)
         )
         val mockPage = createMockPage(mockProducts)
-        whenever(repository.getProducts(any(), any(), any(), any())).thenReturn(Result.success(mockPage))
+        coEvery { repository.getProducts(any(), any(), any(), any()) } returns Result.success(mockPage)
 
         // When
         viewModel = ProductListViewModel(repository)
@@ -73,8 +72,7 @@ class ProductListViewModelTest {
     @Test
     fun `loadProducts updates state with error on failure`() = runTest {
         // Given
-        whenever(repository.getProducts(any(), any(), any(), any()))
-            .thenReturn(Result.failure(RuntimeException("Network error")))
+        coEvery { repository.getProducts(any(), any(), any(), any()) } returns Result.failure(RuntimeException("Network error"))
 
         // When
         viewModel = ProductListViewModel(repository)
@@ -94,7 +92,7 @@ class ProductListViewModelTest {
             ApiProduct(id = 3, name = "Sony Headphones", description = "Audio device", category = "Audio", price = 299.99)
         )
         val mockPage = createMockPage(mockProducts)
-        whenever(repository.getProducts(any(), any(), any(), any())).thenReturn(Result.success(mockPage))
+        coEvery { repository.getProducts(any(), any(), any(), any()) } returns Result.success(mockPage)
 
         viewModel = ProductListViewModel(repository)
         testDispatcher.scheduler.advanceUntilIdle()
@@ -111,7 +109,7 @@ class ProductListViewModelTest {
     fun `selectCategory triggers reload`() = runTest {
         // Given
         val mockPage = createMockPage(emptyList())
-        whenever(repository.getProducts(any(), any(), any(), any())).thenReturn(Result.success(mockPage))
+        coEvery { repository.getProducts(any(), any(), any(), any()) } returns Result.success(mockPage)
 
         viewModel = ProductListViewModel(repository)
         testDispatcher.scheduler.advanceUntilIdle()
@@ -127,7 +125,7 @@ class ProductListViewModelTest {
     fun `setSortBy updates sort option and reloads`() = runTest {
         // Given
         val mockPage = createMockPage(emptyList())
-        whenever(repository.getProducts(any(), any(), any(), any())).thenReturn(Result.success(mockPage))
+        coEvery { repository.getProducts(any(), any(), any(), any()) } returns Result.success(mockPage)
 
         viewModel = ProductListViewModel(repository)
         testDispatcher.scheduler.advanceUntilIdle()

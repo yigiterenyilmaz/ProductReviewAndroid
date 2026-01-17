@@ -3,15 +3,15 @@ package com.productreview.data.repository
 import com.productreview.data.api.ProductApiService
 import com.productreview.data.model.ApiProduct
 import com.productreview.data.model.Page
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 
 /**
- * Unit tests for ProductRepository
+ * Unit tests for ProductRepository using MockK
  */
 class ProductRepositoryTest {
 
@@ -20,7 +20,7 @@ class ProductRepositoryTest {
 
     @Before
     fun setup() {
-        apiService = mock()
+        apiService = mockk()
         repository = ProductRepository(apiService)
     }
 
@@ -44,7 +44,7 @@ class ProductRepositoryTest {
             size = 10,
             last = true
         )
-        whenever(apiService.getProducts(0, 10, "name,asc", null)).thenReturn(mockPage)
+        coEvery { apiService.getProducts(0, 10, "name,asc", null) } returns mockPage
 
         // When
         val result = repository.getProducts(page = 0, size = 10, sort = "name,asc", category = null)
@@ -58,8 +58,7 @@ class ProductRepositoryTest {
     @Test
     fun `getProducts returns failure when API call fails`() = runTest {
         // Given
-        whenever(apiService.getProducts(0, 10, "name,asc", null))
-            .thenThrow(RuntimeException("Network error"))
+        coEvery { apiService.getProducts(0, 10, "name,asc", null) } throws RuntimeException("Network error")
 
         // When
         val result = repository.getProducts(page = 0, size = 10, sort = "name,asc", category = null)
@@ -78,7 +77,7 @@ class ProductRepositoryTest {
             category = "Electronics",
             price = 99.99
         )
-        whenever(apiService.getProductById(1)).thenReturn(mockProduct)
+        coEvery { apiService.getProductById(1) } returns mockProduct
 
         // When
         val result = repository.getProductById(1)
@@ -91,8 +90,7 @@ class ProductRepositoryTest {
     @Test
     fun `getProductById returns failure when product not found`() = runTest {
         // Given
-        whenever(apiService.getProductById(999))
-            .thenThrow(RuntimeException("Product not found"))
+        coEvery { apiService.getProductById(999) } throws RuntimeException("Product not found")
 
         // When
         val result = repository.getProductById(999)

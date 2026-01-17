@@ -77,9 +77,21 @@ class ProductDetailViewModel @Inject constructor(
                 onSuccess = { page ->
                     val domainReviews = page.content.map { Review.fromApiModel(it) }
                     _uiState.update {
+                        // Keep optimistic reviews (those with temporary IDs) when merging
+                        val optimisticReviews = it.reviews.filter { review ->
+                            review.id > 1000000000000L // Temporary IDs are System.currentTimeMillis()
+                        }
+                        val mergedReviews = if (resetPage) {
+                            optimisticReviews + domainReviews
+                        } else {
+                            optimisticReviews + (it.reviews.filter { review ->
+                                review.id <= 1000000000000L
+                            } + domainReviews).distinctBy { review -> review.id }
+                        }
                         it.copy(
                             isLoading = false,
-                            reviews = if (resetPage) domainReviews else it.reviews + domainReviews,
+                            isLoadingReviews = false,
+                            reviews = mergedReviews,
                             currentReviewPage = page.number,
                             totalReviewPages = page.totalPages,
                             hasMoreReviews = !page.last
@@ -90,6 +102,7 @@ class ProductDetailViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
+                            isLoadingReviews = false,
                             error = exception.message ?: "Failed to load reviews"
                         )
                     }
@@ -128,14 +141,31 @@ class ProductDetailViewModel @Inject constructor(
     }
 
     /**
-     * Submit a new review
+     * Submit a new review with Optimistic UI update
      */
     fun submitReview(reviewerName: String, rating: Int, comment: String) {
         val productId = _uiState.value.product?.id ?: return
 
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSubmittingReview = true, submitError = null) }
+        // Optimistic UI: Add review immediately to the list
+        val optimisticReview = Review(
+            id = System.currentTimeMillis(), // Temporary ID
+            reviewerName = reviewerName,
+            rating = rating,
+            comment = comment,
+            helpfulCount = 0,
+            createdAt = java.time.LocalDateTime.now(),
+            isMarkedHelpful = false
+        )
 
+        _uiState.update { state ->
+            state.copy(
+                reviews = listOf(optimisticReview) + state.reviews,
+                isSubmittingReview = true,
+                submitError = null
+            )
+        }
+
+        viewModelScope.launch {
             val result = repository.postReview(
                 productId = productId,
                 reviewerName = reviewerName,
@@ -145,13 +175,15 @@ class ProductDetailViewModel @Inject constructor(
 
             result.fold(
                 onSuccess = {
+                    // Review başarıyla eklendi, artık backend'den gelecek
+                    // Optimistic review zaten listede, backend'den yeni veri gelene kadar kalacak
                     _uiState.update { it.copy(isSubmittingReview = false, reviewSubmitted = true) }
-                    // Reload product and reviews to get updated data
-                    loadProduct(productId)
                 },
                 onFailure = { exception ->
-                    _uiState.update {
-                        it.copy(
+                    // Rollback: Remove the optimistic review on failure
+                    _uiState.update { state ->
+                        state.copy(
+                            reviews = state.reviews.filter { it.id != optimisticReview.id },
                             isSubmittingReview = false,
                             submitError = exception.message ?: "Failed to submit review"
                         )
